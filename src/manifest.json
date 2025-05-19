@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "RefinedRobin",
+  "version": "1.0.0",
+  "description": "Automate form filling on claude.ai",
+  "permissions": ["activeTab", "scripting", "tabs", "storage"],
+  "host_permissions": ["https://claude.ai/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "RefinedRobin - Click to automate Claude.ai"
+  },
+  "commands": {
+    "execute-automation": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Execute RefinedRobin automation"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injectable.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
