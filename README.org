@@ -1,0 +1,72 @@
+#+TITLE: RefinedRobin
+#+DESCRIPTION: Chrome extension for automated form filling on claude.ai
+
+* About
+
+RefinedRobin is a Chrome extension that automates form filling on claude.ai by capturing the current page's URL and text content, then navigating to Claude.ai, filling the form with this data plus a predefined message, and submitting it.
+
+* Installation
+
+#+BEGIN_SRC bash
+# Clone and setup
+git clone [repository-url]
+cd refinedrobin
+just setup
+#+END_SRC
+
+Load the =dist= directory as an unpacked extension in Chrome.
+
+* Usage
+
+#+BEGIN_SRC bash
+# Build the extension
+just build
+
+# Development with auto-rebuild
+just dev
+
+# Clean up
+just teardown
+#+END_SRC
+
+* Using the Extension
+
+** Keyboard Shortcut (Recommended)
+- Windows/Linux: =Ctrl+Shift+R=
+- Mac: =Cmd+Shift+R=
+
+** Alternative Methods
+- Click the RefinedRobin icon in the Chrome toolbar
+- Right-click the icon and select "Execute Automation"
+- Open the popup and click "Execute Automation"
+
+* Features
+
+- *Single Keystroke Activation*: Use =Ctrl+Shift+R= (or =Cmd+Shift+R= on Mac) from any webpage
+- *Smart Page Extraction*: Captures URL and clean text content (like =lynx -dump=)
+- *Automated Navigation*: Opens Claude.ai in a new tab
+- *Form Automation*: Fills and submits the form with captured data
+- *Error Handling and Logging*: Comprehensive error handling with verbose logging
+- *TypeScript Implementation*: Following SOLID principles for maintainable code
+
+* How It Works
+
+1. Press =Ctrl+Shift+R= on any webpage
+2. Extension extracts the current page's URL and text content
+3. Opens a new tab with =https://claude.ai/new=
+4. Combines the URL, predefined message, and page content
+5. Fills the Claude.ai form and submits it automatically
+
+* Configuration
+
+The extension sends this predefined message along with your page data:
+
+#+BEGIN_EXAMPLE
+Create the TLDR; for this text.
+
+You will not add preamble to your response.
+You will not title your response with anything including "TLDR".
+Please separate each sentence of your text response with new paragraph.
+Only provide that and refrain from adding comments.
+...
+#+END_EXAMPLE
