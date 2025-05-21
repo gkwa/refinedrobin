@@ -109,10 +109,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Set preferHTML checkbox state from storage
-        autoCloseEnabledCheckbox.checked = result.autoCloseEnabled ?? false
+        preferHTMLCheckbox.checked = result.preferHTML === true
 
         // Set auto-close settings
-        autoCloseEnabledCheckbox.checked = result.autoCloseEnabled === true
+        autoCloseEnabledCheckbox.checked = result.autoCloseEnabled ?? false
 
         if (result.autoCloseDelay) {
           // Convert milliseconds back to minutes for display
