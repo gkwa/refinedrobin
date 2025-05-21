@@ -48,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Save auto-close settings to storage
   const saveAutoCloseSettings = (): Promise<void> => {
     const enabled = autoCloseEnabledCheckbox.checked
+
     // Convert minutes to milliseconds
     const delayMinutes = parseInt(autoCloseDelayInput.value) || 3
     const delayMilliseconds = delayMinutes * 60 * 1000
@@ -108,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Set preferHTML checkbox state from storage
-        preferHTMLCheckbox.checked = result.preferHTML === true
+        autoCloseEnabledCheckbox.checked = result.autoCloseEnabled ?? false
 
         // Set auto-close settings
         autoCloseEnabledCheckbox.checked = result.autoCloseEnabled === true
