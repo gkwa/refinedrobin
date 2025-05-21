@@ -3,7 +3,7 @@
   "name": "RefinedRobin",
   "version": "1.0.0",
   "description": "Automate form filling on claude.ai",
-  "permissions": ["activeTab", "scripting", "tabs", "storage"],
+  "permissions": ["activeTab", "scripting", "tabs", "storage", "alarms"],
   "host_permissions": ["https://claude.ai/*"],
   "background": {
     "service_worker": "background.js",

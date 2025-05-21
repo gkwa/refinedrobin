@@ -4,26 +4,83 @@ const logger = {
   error: (message: string): void => console.error(`[ERROR] ${message}`),
   debug: (message: string): void => console.log(`[DEBUG] ${message}`),
 }
+
+// Map to track tabs scheduled for closing
+const tabCloseMap = new Map<string, number>()
+
 chrome.runtime.onInstalled.addListener((): void => {
   logger.info("RefinedRobin extension installed")
 })
+
+// Handle alarms for tab closing
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name.startsWith("closeTab_")) {
+    const tabId = parseInt(alarm.name.replace("closeTab_", ""), 10)
+
+    logger.info(`Alarm triggered to close tab ${tabId}`)
+
+    chrome.tabs.get(tabId, (tab) => {
+      if (chrome.runtime.lastError) {
+        logger.error(`Error getting tab ${tabId}: ${chrome.runtime.lastError.message}`)
+        return
+      }
+
+      // Close the tab
+      chrome.tabs.remove(tabId, () => {
+        if (chrome.runtime.lastError) {
+          logger.error(`Error closing tab ${tabId}: ${chrome.runtime.lastError.message}`)
+        } else {
+          logger.info(`Successfully closed tab ${tabId}`)
+        }
+
+        // Remove from our tracking map
+        tabCloseMap.delete(`closeTab_${tabId}`)
+      })
+    })
+  }
+})
+
 // Get saved prompt and mode from localStorage
 async function getSavedPromptConfig(): Promise<any> {
   return new Promise((resolve) => {
-    chrome.storage.local.get(["promptMode", "customPrompt", "preferHTML"], (result) => {
-      const config: any = {
-        mode: result.promptMode || "tldr",
-        preferHTML: result.preferHTML === true,
-      }
+    chrome.storage.local.get(
+      ["promptMode", "customPrompt", "preferHTML", "autoCloseEnabled", "autoCloseDelay"],
+      (result) => {
+        const config: any = {
+          mode: result.promptMode || "tldr",
+          preferHTML: result.preferHTML === true,
+          autoCloseEnabled: result.autoCloseEnabled === true,
+          autoCloseDelay: result.autoCloseDelay || 180000, // Default 3 minutes in milliseconds
+        }
 
-      if (result.promptMode === "custom" && result.customPrompt) {
-        config.predefinedText = result.customPrompt
-      }
+        if (result.promptMode === "custom" && result.customPrompt) {
+          config.predefinedText = result.customPrompt
+        }
 
-      resolve(config)
-    })
+        resolve(config)
+      },
+    )
   })
 }
+
+// Schedule a tab to be closed after the specified delay
+function scheduleTabClose(tabId: number, delayInMinutes: number): void {
+  const alarmName = `closeTab_${tabId}`
+
+  // Clear any existing alarm for this tab
+  chrome.alarms.clear(alarmName)
+
+  // Create a new alarm
+  chrome.alarms.create(alarmName, {
+    delayInMinutes: delayInMinutes,
+  })
+
+  // Track in our map
+  tabCloseMap.set(alarmName, tabId)
+
+  logger.info(`Tab ${tabId} scheduled to close in ${delayInMinutes} minutes`)
+}
+
 // Function to execute the automation
 async function executeAutomation(currentTab?: chrome.tabs.Tab, config?: any): Promise<void> {
   try {
@@ -61,11 +118,26 @@ async function executeAutomation(currentTab?: chrome.tabs.Tab, config?: any): Pr
         // Continue with automation even if page extraction fails
       }
     }
+
     // Create a new tab with Claude.ai but without stealing focus
     const newTab = await chrome.tabs.create({
       url: "https://claude.ai/new",
       active: false, // This prevents the new tab from stealing focus
     })
+
+    // Set up auto-close if enabled
+    if (config.autoCloseEnabled && newTab.id) {
+      const closeDelayMs = config.autoCloseDelay || 180000 // Default 3 minutes
+      const closeDelayMinutes = closeDelayMs / (60 * 1000)
+
+      logger.info(
+        `Auto-close enabled: tab ${newTab.id} will close after ${closeDelayMinutes} minutes`,
+      )
+
+      // Schedule tab close using Chrome's alarm API
+      scheduleTabClose(newTab.id, closeDelayMinutes)
+    }
+
     // Wait for the tab to load, then execute the automation
     chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
       if (tabId === newTab.id && changeInfo.status === "complete") {
@@ -98,10 +170,12 @@ async function executeAutomation(currentTab?: chrome.tabs.Tab, config?: any): Pr
     )
   }
 }
+
 // Handle browser action click (when user clicks the extension icon)
 chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab): Promise<void> => {
   await executeAutomation(tab)
 })
+
 // Handle keyboard shortcuts
 chrome.commands.onCommand.addListener(async (command: string): Promise<void> => {
   logger.debug(`Command received: ${command}`)
@@ -113,6 +187,7 @@ chrome.commands.onCommand.addListener(async (command: string): Promise<void> => 
     await executeAutomation(currentTab)
   }
 })
+
 // Handle messages from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "popup_execute") {
