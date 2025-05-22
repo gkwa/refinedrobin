@@ -4,13 +4,18 @@ export class ContentBuilderService {
   constructor(private logger: Logger) {}
 
   private buildContentTemplate(url: string, predefinedText: string, content: string): string {
-    return `Source URL: ${url}
-
+    return `
+    <my_initial_request>
+    <source_url>${url}</source_url>
+    <boilerplate_text>
 ${predefinedText}
+    </boilerplate_text>
+<page_content>
+${content}
+</page_content>
+</my_initial_request>
 
-Page Content:
-
-${content}`
+`
   }
 
   buildFormContent(predefinedText: string, pageData: PageData): string {
