@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.0.323",
-    "@types/node": "22.15.20",
+    "@types/node": "22.15.21",
     "@vitest/coverage-v8": "3.1.4",
     "@vitest/ui": "3.1.4",
     "jsdom": "26.1.0",
@@ -22,13 +22,19 @@
     "vite": "^6.3.5",
     "vitest": "^3.1.4"
   },
-  "keywords": ["chrome-extension", "automation", "claude-ai"],
+  "keywords": [
+    "chrome-extension",
+    "automation",
+    "claude-ai"
+  ],
   "dependencies": {
     "@mozilla/readability": "^0.6.0"
   },
   "author": "",
   "license": "MIT",
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
