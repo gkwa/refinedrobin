@@ -73,10 +73,9 @@ export const TLDR_SUMMARY_PROMPT = `
 - Confirm search links would genuinely help users explore the topic further
 - Check that formatting follows the specified requirements exactly
 
+Embed your response including the links in between a start and end delimiters.  
 
-You should embed your response including the links in between a start and end delimiters.  
-
-The start delimiter is defined like this:  ten periods, space, the word start in all caps, space, ten periods.
+The start delimiter is defined like this: ten periods, space, the word start in all caps, space, ten periods.
 
 The block end delimiter is defined like this: ten periods, space, the word end in all caps, space, ten periods.
 `
