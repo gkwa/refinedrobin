@@ -58,6 +58,7 @@ When listing your links create them as a bulletd list in markdown but don't give
 - Consider the target audience's likely knowledge level
 - Ensure search links cover different aspects of the topic (beginner tutorials, advanced techniques, real-world applications, etc.)
 - Include both text-based and video resources when appropriate
+- Include links that gather sentiment
 
 **Quality Checks:**
 
