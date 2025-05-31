@@ -51,7 +51,7 @@ This allows vertical breathing room to allow user to rest between reading.
    - Include YouTube search links when video content would be beneficial
    - Ensure search terms are specific and relevant to the topic
 
-When listing your links create them as a bulleted list in markdown but don't give the list a title because its obvious what the list is all about.  Just make the bulletd list without a title.
+When listing your links create them as a markdown bulleted list using hyphen as the bullet but don't give the list a title because its obvious what the list is all about.  So please make the bulleted list without a title.
 
 Separate the list of links by 10 newline characters to allow breathing room between the content and the links.
 
