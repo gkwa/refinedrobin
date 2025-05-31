@@ -4,7 +4,7 @@ import { FormFinderService } from "./services/form-finder.js"
 import { FormFillerService } from "./services/form-filler.js"
 import { PageExtractorService } from "./services/page-extractor.js"
 import { PageData } from "./types/extension.js"
-import { DEFAULT_PROMPT } from "./config/prompt-templates.js"
+import { loadTLDRSummaryPrompt, DEFAULT_PROMPT } from "./config/prompt-templates.js"
 
 const DEFAULT_CONFIG = {
   targetUrl: "https://claude.ai/new",
@@ -25,11 +25,10 @@ async function initializeExtension(): Promise<void> {
       const pageData = message.pageData as PageData | null
 
       // If we're in custom mode and have predefined text from config, use it
-
       if (config.mode === "custom" && config.predefinedText) {
         config.predefinedText = config.predefinedText
       } else {
-        // Otherwise, use default prompt from constants
+        // Otherwise, use default prompt - will be loaded in executeDirectly
         config.predefinedText = DEFAULT_PROMPT
       }
 
@@ -50,8 +49,8 @@ async function executeDirectly(
   try {
     // Wait for elements to be ready
     await waitForElements(logger)
-    // Initialize services with strategy configuration
 
+    // Initialize services with strategy configuration
     const pageExtractor = new PageExtractorService(logger, config.extractionStrategy)
     const formFinder = new FormFinderService(logger)
     const formFiller = new FormFillerService(logger)
@@ -66,14 +65,25 @@ async function executeDirectly(
       throw new Error("Submit button not found")
     }
 
-    // Build the content to fill into the form
+    // Load the appropriate prompt
+    let promptText = config.predefinedText
+    if (config.mode === "tldr") {
+      try {
+        promptText = await loadTLDRSummaryPrompt()
+        logger.debug("Loaded TLDR prompt from markdown file")
+      } catch (error) {
+        logger.error(`Failed to load TLDR prompt: ${error}`)
+        promptText = DEFAULT_PROMPT
+      }
+    }
 
+    // Build the content to fill into the form
     let contentToFill: string
 
     if (pageData) {
       // If we have page data, include URL and content (HTML or text)
       contentToFill = contentBuilder.buildFormContentWithHTML(
-        config.predefinedText,
+        promptText,
         pageData,
         config.preferHTML,
       )
@@ -89,7 +99,7 @@ async function executeDirectly(
         const currentPageData = pageExtractor.extractPageData()
 
         contentToFill = contentBuilder.buildFormContentWithHTML(
-          config.predefinedText,
+          promptText,
           currentPageData,
           config.preferHTML,
         )
@@ -98,7 +108,7 @@ async function executeDirectly(
         )
       } catch (error) {
         logger.error(`Failed to extract from current page: ${error}`)
-        contentToFill = config.predefinedText
+        contentToFill = promptText
         logger.info("Using predefined text only")
       }
     }

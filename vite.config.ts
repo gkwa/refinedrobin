@@ -41,10 +41,10 @@ export default defineConfig({
         copyFileSync("src/manifest.json", "dist/manifest.json")
         copyFileSync("src/popup/popup.html", "dist/popup.html")
 
-        // Create config directory and copy prompt templates
+        // Create config directory and copy markdown file
         try {
           mkdirSync("dist/config", { recursive: true })
-          copyFileSync("src/config/prompt-templates.ts", "dist/config/prompt-templates.js")
+          copyFileSync("src/config/prompt-templates.md", "dist/config/prompt-templates.md")
         } catch (err) {
           console.error("Error copying config files:", err)
         }

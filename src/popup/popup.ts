@@ -64,22 +64,17 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   }
 
-  // Fetch the default prompt from config
+  // Fetch the default prompt from markdown file
   const loadDefaultPrompt = async (): Promise<string> => {
     try {
-      const response = await fetch(chrome.runtime.getURL("config/prompt-templates.js"))
-      const text = await response.text()
-
-      // Simple regex to extract the default prompt template
-      const match = text.match(/TLDR_SUMMARY_PROMPT\s*=\s*`([\s\S]*?)`/)
-      if (match && match[1]) {
-        return match[1].trim()
+      const response = await fetch(chrome.runtime.getURL("config/prompt-templates.md"))
+      if (!response.ok) {
+        throw new Error(`Failed to load prompt template: ${response.status}`)
       }
-
-      return "Error loading default prompt"
+      return await response.text()
     } catch (error) {
       console.error("Failed to load default prompt:", error)
-      return "Error loading default prompt"
+      return "Please create a TLDR summary of the provided content."
     }
   }
 

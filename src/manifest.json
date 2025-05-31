@@ -31,7 +31,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["injectable.js"],
+      "resources": ["injectable.js", "config/prompt-templates.md"],
       "matches": ["<all_urls>"]
     }
   ]
