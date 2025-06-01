@@ -6,9 +6,9 @@
 
 Allow 5 newlines surrounding the url to allow breathing room between the url and the content.
 
-So the result would be this:
+So the your response will have this shape:
 
-5 newlines, url and then another 5 newlines
+5 newlines followed by the url followed by another 5 newlines
 
 This allows vertical breathing room to allow user to rest between reading.
 
