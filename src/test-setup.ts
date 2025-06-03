@@ -46,17 +46,13 @@ interface MockChrome {
   }
 }
 
-// Declare the mock chrome on globalThis with proper typing
-declare global {
-  var chrome: MockChrome
-}
-
 const createEventMock = (): MockChromeEvent => ({
   addListener: vi.fn(),
   removeListener: vi.fn(),
 })
 
-global.chrome = {
+// Use type assertion to override the existing chrome types
+;(globalThis as any).chrome = {
   runtime: {
     onMessage: createEventMock(),
     sendMessage: vi.fn(),
@@ -94,7 +90,7 @@ global.chrome = {
     clear: vi.fn(),
     onAlarm: createEventMock(),
   },
-}
+} satisfies MockChrome
 
 // Mock window.fs for file operations
 Object.defineProperty(window, "fs", {

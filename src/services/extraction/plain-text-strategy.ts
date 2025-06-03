@@ -17,7 +17,7 @@ export class PlainTextExtractionStrategy extends BaseExtractionStrategy {
 
     return {
       text: this.cleanText(textContent),
-      html: null,
+      html: undefined,
     }
   }
 }
