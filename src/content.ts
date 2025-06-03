@@ -18,7 +18,6 @@ async function initializeExtension(): Promise<void> {
   const logger = new ConsoleLogger(verboseLevel)
 
   logger.debug("Content script loaded")
-
   // Listen for messages from background script
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "execute") {
@@ -39,9 +38,6 @@ async function initializeExtension(): Promise<void> {
 
       return true // Indicates we will send a response asynchronously
     }
-
-    // Return undefined for other message types
-    return undefined
   })
 }
 
@@ -59,7 +55,6 @@ async function executeDirectly(
     const formFinder = new FormFinderService(logger)
     const formFiller = new FormFillerService(logger)
     const contentBuilder = new ContentBuilderService(logger)
-
     const { textbox, submitButton } = formFinder.findFormElements()
 
     if (!textbox) {
@@ -94,6 +89,7 @@ async function executeDirectly(
       )
       logger.info(`Including page data from: ${pageData.url}`)
       logger.debug(`Page text length: ${pageData.textContent.length} characters`)
+
       if (pageData.htmlContent) {
         logger.debug(`Page HTML length: ${pageData.htmlContent.length} characters`)
       }
@@ -101,6 +97,7 @@ async function executeDirectly(
       // Fallback: extract from current page if possible, otherwise use predefined text only
       try {
         const currentPageData = pageExtractor.extractPageData()
+
         contentToFill = contentBuilder.buildFormContentWithHTML(
           promptText,
           currentPageData,
@@ -130,8 +127,8 @@ async function waitForElements(logger: ConsoleLogger): Promise<void> {
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     logger.debug(`Waiting for elements, attempt ${attempt}/${maxAttempts}`)
-
     // Check if the main textbox is available
+
     const textbox =
       document.querySelector('[contenteditable="true"]') ||
       document.querySelector(".ProseMirror") ||

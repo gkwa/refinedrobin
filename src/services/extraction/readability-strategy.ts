@@ -1,5 +1,5 @@
 import { BaseExtractionStrategy } from "./base-extraction-strategy.js"
-import { Readability } from "@mozilla/readability"
+import Readability from "@mozilla/readability"
 
 export class ReadabilityExtractionStrategy extends BaseExtractionStrategy {
   readonly name = "readability"

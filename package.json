@@ -22,13 +22,19 @@
     "vite": "^6.3.5",
     "vitest": "^3.2.0"
   },
-  "keywords": ["chrome-extension", "automation", "claude-ai"],
+  "keywords": [
+    "chrome-extension",
+    "automation",
+    "claude-ai"
+  ],
   "dependencies": {
     "@mozilla/readability": "^0.6.0"
   },
   "author": "",
   "license": "MIT",
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
