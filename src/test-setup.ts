@@ -1,38 +1,98 @@
 import { vi } from "vitest"
 
-// Mock Chrome APIs
+// Create focused mock types for what we actually use
+interface MockChromeEvent {
+  addListener: ReturnType<typeof vi.fn>
+  removeListener: ReturnType<typeof vi.fn>
+}
+
+interface MockChrome {
+  runtime: {
+    onMessage: MockChromeEvent
+    sendMessage: ReturnType<typeof vi.fn>
+    onInstalled: MockChromeEvent
+    getURL: ReturnType<typeof vi.fn>
+    lastError?: { message: string }
+  }
+  tabs: {
+    create: ReturnType<typeof vi.fn>
+    query: ReturnType<typeof vi.fn>
+    get: ReturnType<typeof vi.fn>
+    remove: ReturnType<typeof vi.fn>
+    onUpdated: MockChromeEvent
+    sendMessage: ReturnType<typeof vi.fn>
+  }
+  scripting: {
+    executeScript: ReturnType<typeof vi.fn>
+  }
+  action: {
+    onClicked: MockChromeEvent
+  }
+  commands: {
+    onCommand: MockChromeEvent
+  }
+  storage: {
+    local: {
+      get: ReturnType<typeof vi.fn>
+      set: ReturnType<typeof vi.fn>
+      remove: ReturnType<typeof vi.fn>
+      clear: ReturnType<typeof vi.fn>
+    }
+  }
+  alarms: {
+    create: ReturnType<typeof vi.fn>
+    clear: ReturnType<typeof vi.fn>
+    onAlarm: MockChromeEvent
+  }
+}
+
+// Declare the mock chrome on globalThis with proper typing
+declare global {
+  var chrome: MockChrome
+}
+
+const createEventMock = (): MockChromeEvent => ({
+  addListener: vi.fn(),
+  removeListener: vi.fn(),
+})
+
 global.chrome = {
   runtime: {
-    onMessage: {
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-    },
+    onMessage: createEventMock(),
     sendMessage: vi.fn(),
-    onInstalled: {
-      addListener: vi.fn(),
-    },
+    onInstalled: createEventMock(),
+    getURL: vi.fn(),
+    lastError: undefined,
   },
   tabs: {
     create: vi.fn(),
     query: vi.fn(),
-    onUpdated: {
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-    },
+    get: vi.fn(),
+    remove: vi.fn(),
+    onUpdated: createEventMock(),
     sendMessage: vi.fn(),
   },
   scripting: {
     executeScript: vi.fn(),
   },
   action: {
-    onClicked: {
-      addListener: vi.fn(),
-    },
+    onClicked: createEventMock(),
   },
   commands: {
-    onCommand: {
-      addListener: vi.fn(),
+    onCommand: createEventMock(),
+  },
+  storage: {
+    local: {
+      get: vi.fn(),
+      set: vi.fn(),
+      remove: vi.fn(),
+      clear: vi.fn(),
     },
+  },
+  alarms: {
+    create: vi.fn(),
+    clear: vi.fn(),
+    onAlarm: createEventMock(),
   },
 }
 
@@ -46,7 +106,7 @@ Object.defineProperty(window, "fs", {
 
 // Mock window.getComputedStyle for visibility tests
 Object.defineProperty(window, "getComputedStyle", {
-  value: (element: Element) => ({
+  value: (element: HTMLElement) => ({
     display: element.style?.display || "block",
     visibility: element.style?.visibility || "visible",
     getPropertyValue: (prop: string) => {
@@ -60,8 +120,8 @@ Object.defineProperty(window, "getComputedStyle", {
 
 // Ensure offsetParent works correctly in tests
 Object.defineProperty(HTMLElement.prototype, "offsetParent", {
-  get: function () {
-    if (this.style.display === "none" || this._mockOffsetParent === null) {
+  get: function (this: HTMLElement) {
+    if ((this as any).style.display === "none" || (this as any)._mockOffsetParent === null) {
       return null
     }
     return this.parentElement || document.body
