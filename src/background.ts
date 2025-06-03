@@ -16,9 +16,7 @@ chrome.runtime.onInstalled.addListener((): void => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith("closeTab_")) {
     const tabId = parseInt(alarm.name.replace("closeTab_", ""), 10)
-
     logger.info(`Alarm triggered to close tab ${tabId}`)
-
     chrome.tabs.get(tabId, (tab) => {
       if (chrome.runtime.lastError) {
         logger.error(`Error getting tab ${tabId}: ${chrome.runtime.lastError.message}`)
@@ -32,7 +30,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
         } else {
           logger.info(`Successfully closed tab ${tabId}`)
         }
-
         // Remove from our tracking map
         tabCloseMap.delete(`closeTab_${tabId}`)
       })
@@ -77,7 +74,6 @@ function scheduleTabClose(tabId: number, delayInMinutes: number): void {
 
   // Track in our map
   tabCloseMap.set(alarmName, tabId)
-
   logger.info(`Tab ${tabId} scheduled to close in ${delayInMinutes} minutes`)
 }
 
@@ -90,15 +86,18 @@ async function executeAutomation(currentTab?: chrome.tabs.Tab, config?: any): Pr
     }
 
     let pageData = null
+
     // If we have a current tab, extract its page data first
     if (currentTab && currentTab.id && currentTab.url && !currentTab.url.includes("claude.ai")) {
       try {
         logger.debug(`Extracting page data from: ${currentTab.url}`)
+
         // Inject our injectable script
         await chrome.scripting.executeScript({
           target: { tabId: currentTab.id },
           files: ["injectable.js"],
         })
+
         // Now execute the extractPageData function from the injected script
         const results = await chrome.scripting.executeScript({
           target: { tabId: currentTab.id },
@@ -107,6 +106,7 @@ async function executeAutomation(currentTab?: chrome.tabs.Tab, config?: any): Pr
             return (window as any).extractPageData("readability")
           },
         })
+
         if (results && results[0] && results[0].result) {
           pageData = results[0].result
           logger.debug(`Extracted page data from: ${pageData.url}`)
@@ -129,7 +129,6 @@ async function executeAutomation(currentTab?: chrome.tabs.Tab, config?: any): Pr
     if (config.autoCloseEnabled && newTab.id) {
       const closeDelayMs = config.autoCloseDelay || 180000 // Default 3 minutes
       const closeDelayMinutes = closeDelayMs / (60 * 1000)
-
       logger.info(
         `Auto-close enabled: tab ${newTab.id} will close after ${closeDelayMinutes} minutes`,
       )
@@ -143,6 +142,7 @@ async function executeAutomation(currentTab?: chrome.tabs.Tab, config?: any): Pr
       if (tabId === newTab.id && changeInfo.status === "complete") {
         // Remove this listener to avoid memory leaks
         chrome.tabs.onUpdated.removeListener(listener)
+
         // Execute the content script automation with the page data
         if (newTab.id) {
           chrome.tabs
@@ -179,10 +179,12 @@ chrome.action.onClicked.addListener(async (tab: chrome.tabs.Tab): Promise<void> 
 // Handle keyboard shortcuts
 chrome.commands.onCommand.addListener(async (command: string): Promise<void> => {
   logger.debug(`Command received: ${command}`)
+
   if (command === "execute-automation") {
     // Get the current active tab for page extraction
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
     const currentTab = tabs[0]
+
     logger.info("Keyboard shortcut triggered automation")
     await executeAutomation(currentTab)
   }
@@ -203,4 +205,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })
     return true // Indicates we will send a response asynchronously
   }
+
+  // Return undefined for other message types
+  return undefined
 })
