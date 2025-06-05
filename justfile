@@ -18,4 +18,5 @@ dev:
 
 # Build for production
 build:
+    npx tsc --noEmit --project tsconfig.json
     pnpm run build
