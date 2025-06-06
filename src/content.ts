@@ -3,6 +3,8 @@ import { ContentBuilderService } from "./services/content-builder.js"
 import { FormFinderService } from "./services/form-finder.js"
 import { FormFillerService } from "./services/form-filler.js"
 import { PageExtractorService } from "./services/page-extractor.js"
+import { ResponseMonitorService } from "./services/response-monitor.js"
+import { AutomationOrchestratorService } from "./services/automation-orchestrator.js"
 import { PageData } from "./types/extension.js"
 import { loadTLDRSummaryPrompt, DEFAULT_PROMPT } from "./config/prompt-templates.js"
 
@@ -59,6 +61,8 @@ async function executeDirectly(
     const formFinder = new FormFinderService(logger)
     const formFiller = new FormFillerService(logger)
     const contentBuilder = new ContentBuilderService(logger)
+    const responseMonitor = new ResponseMonitorService(logger)
+    const automationOrchestrator = new AutomationOrchestratorService(logger)
 
     const { textbox, submitButton } = formFinder.findFormElements()
 
@@ -118,6 +122,30 @@ async function executeDirectly(
 
     formFiller.fillTextbox(textbox, contentToFill)
     formFiller.submitForm(submitButton)
+
+    // Start monitoring for response completion
+    responseMonitor
+      .startMonitoring()
+      .then(async () => {
+        logger.info("Claude has finished responding - waiting 30 seconds before automation")
+
+        // Wait 30 seconds before starting automation
+        await new Promise((resolve) => setTimeout(resolve, 30000))
+
+        logger.info("30-second delay complete - starting automation sequence")
+
+        try {
+          // Execute the automation sequence after Claude responds and delay
+          await automationOrchestrator.executeAutomationSequence()
+        } catch (automationError) {
+          logger.error(
+            `Post-response automation failed: ${automationError instanceof Error ? automationError.message : String(automationError)}`,
+          )
+        }
+      })
+      .catch((error) => {
+        logger.error(`Response monitoring failed: ${error.message}`)
+      })
   } catch (error) {
     logger.error(`Execution failed: ${error instanceof Error ? error.message : String(error)}`)
     throw error
