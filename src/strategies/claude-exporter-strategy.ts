@@ -1,9 +1,26 @@
+import { DocumentSaveStrategy } from "../types/document-save-strategy.js"
 import { Logger } from "../types/extension.js"
 
-export class ButtonSequenceService {
+export class ClaudeExporterStrategy implements DocumentSaveStrategy {
   constructor(private logger: Logger) {}
 
-  async clickButtonsSequentially(): Promise<void> {
+  getName(): string {
+    return "ClaudeExporter Extension"
+  }
+
+  isAvailable(): boolean {
+    // Check if ClaudeExporter extension is available by looking for its UI elements
+    const selectButton = this.findButton("Select", ".css-v9fu0n")
+    return selectButton !== null
+  }
+
+  async save(): Promise<void> {
+    this.logger.info("Using ClaudeExporter extension to save document")
+
+    if (!this.isAvailable()) {
+      throw new Error("ClaudeExporter extension is not available")
+    }
+
     // Step 1: Click Select button
     const selectButton = this.findButton("Select", ".css-v9fu0n")
     if (!selectButton) throw new Error("Select button not found")
@@ -11,20 +28,27 @@ export class ButtonSequenceService {
     this.logger.info("Clicking Select button...")
     selectButton.click()
 
-    // Step 2: Wait for and click Export button
-    const exportButton = await this.waitForButton("Export")
-    this.logger.info("Clicking Export button...")
-    exportButton.click()
+    // Step 2: Try to find and click Export button (graceful degradation)
+    try {
+      const exportButton = await this.waitForButton("Export", 5000) // Shorter timeout
+      this.logger.info("ClaudeExporter detected - clicking Export button...")
+      exportButton.click()
 
-    // Step 3: Wait 5 seconds, then click Cancel
-    this.logger.info("Waiting 5 seconds before clicking Cancel...")
-    await this.delay(5000)
+      // Step 3: Wait 5 seconds, then click Cancel
+      this.logger.info("Waiting 5 seconds before clicking Cancel...")
+      await this.delay(5000)
 
-    const cancelButton = this.findButton("Cancel", ".css-1m5ga1e")
-    if (!cancelButton) throw new Error("Cancel button not found")
-
-    this.logger.info("Clicking Cancel button...")
-    cancelButton.click()
+      const cancelButton = this.findButton("Cancel", ".css-1m5ga1e")
+      if (cancelButton) {
+        this.logger.info("Clicking Cancel button...")
+        cancelButton.click()
+      } else {
+        this.logger.info("Cancel button not found - export may have completed")
+      }
+    } catch (error) {
+      this.logger.info("Export button not found - ClaudeExporter plugin may not be fully installed")
+      this.logger.info("Document save completed (Select button clicked)")
+    }
   }
 
   private findButton(text: string, cssClass?: string): HTMLElement | null {

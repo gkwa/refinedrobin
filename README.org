@@ -1,9 +1,16 @@
 #+TITLE: RefinedRobin
-#+DESCRIPTION: Chrome extension for automated form filling on claude.ai
+#+DESCRIPTION: Chrome extension for automated form filling on claude.ai with document saving
 
 * About
 
-RefinedRobin is a Chrome extension that automates form filling on claude.ai by capturing the current page's URL and text content, then navigating to Claude.ai, filling the form with this data plus a predefined message, and submitting it.
+RefinedRobin is a Chrome extension that automates form filling on claude.ai by capturing the current page's URL and text content, then navigating to Claude.ai, filling the form with this data plus a predefined message, submitting it, and automatically saving Claude's response.
+
+* Dependencies
+
+** Required Chrome Extension
+RefinedRobin relies on the [[https://chromewebstore.google.com/detail/claude-exporter-save-clau/elhmfakncmnghlnabnolalcjkdpfjnin][Claude Exporter]] extension to save Claude's responses. Install it from the Chrome Web Store before using RefinedRobin.
+
+*Note:* The document saving functionality uses a strategy pattern, so future versions may support alternative saving methods without requiring the Claude Exporter extension.
 
 * Installation
 
@@ -46,6 +53,8 @@ just teardown
 - *Smart Page Extraction*: Captures URL and clean text content (like =lynx -dump=)
 - *Automated Navigation*: Opens Claude.ai in a new tab
 - *Form Automation*: Fills and submits the form with captured data
+- *Response Monitoring*: Detects when Claude finishes responding
+- *Automatic Document Saving*: Saves Claude's response using Claude Exporter extension
 - *Error Handling and Logging*: Comprehensive error handling with verbose logging
 - *TypeScript Implementation*: Following SOLID principles for maintainable code
 
@@ -56,3 +65,25 @@ just teardown
 3. Opens a new tab with =https://claude.ai/new=
 4. Combines the URL, predefined message, and page content
 5. Fills the Claude.ai form and submits it automatically
+6. Monitors for Claude's response completion (detects "Retry" button)
+7. Waits 30 seconds for response to stabilize
+8. Automatically saves the response using Claude Exporter extension
+
+* Architecture
+
+The extension uses a clean pipeline architecture:
+
+#+BEGIN_SRC
+Page Extraction → Form Filling → Response Monitoring → Document Saving
+#+END_SRC
+
+** Document Saving Strategy
+Currently uses =ClaudeExporterStrategy= which integrates with the Claude Exporter extension. The strategy pattern allows for future implementations like:
+- Native browser downloads
+- Cloud storage integration
+- Custom API endpoints
+
+* Troubleshooting
+
+** Export functionality not working?
+Ensure the [[https://chromewebstore.google.com/detail/claude-exporter-save-clau/elhmfakncmnghlnabnolalcjkdpfjnin][Claude Exporter]] extension is installed and enabled. RefinedRobin will gracefully degrade if the extension is unavailable, still providing form automation without document saving.

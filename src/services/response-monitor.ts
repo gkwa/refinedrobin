@@ -3,11 +3,20 @@ import { Logger } from "../types/extension.js"
 export class ResponseMonitorService {
   private observer: MutationObserver | null = null
   private isMonitoring = false
-  private foundStrings = new Set<string>()
 
   constructor(private logger: Logger) {}
 
-  startMonitoring(): Promise<void> {
+  async waitForCompletion(): Promise<void> {
+    this.logger.info("Waiting for Claude to finish responding...")
+
+    await this.startMonitoring()
+
+    this.logger.info("Claude has finished responding - waiting 30 seconds before automation")
+    await this.delay(30000)
+    this.logger.info("30-second delay complete - ready for next pipeline step")
+  }
+
+  private startMonitoring(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.isMonitoring) {
         this.logger.debug("Response monitoring already in progress")
@@ -17,72 +26,50 @@ export class ResponseMonitorService {
       this.isMonitoring = true
       this.logger.debug("Starting response monitoring for retry button")
 
-      // Create mutation observer using the exact same logic as cosykoala
       this.observer = new MutationObserver((mutations) => {
-        this.handleMutations(mutations, resolve)
+        if (this.detectRetryText(mutations)) {
+          this.logger.info("Retry button detected - Claude has finished responding")
+          this.stopMonitoring()
+          resolve()
+        }
       })
 
-      // Start observing with the same configuration as cosykoala StringObserver
       this.observer.observe(document.body, {
         childList: true,
         subtree: true,
         characterData: true,
       })
 
-      this.logger.debug("Started monitoring document.body for retry text")
-
-      // Set a timeout as fallback
+      // 5 minute timeout fallback
       setTimeout(() => {
         if (this.isMonitoring) {
           this.logger.debug("Response monitoring timeout reached")
           this.stopMonitoring()
           resolve()
         }
-      }, 300000) // 5 minute timeout
+      }, 300000)
     })
   }
 
-  private handleMutations(mutations: MutationRecord[], resolve: () => void): void {
-    for (const mutation of mutations) {
-      this.checkForStrings(mutation, resolve)
-    }
-  }
-
-  private checkForStrings(mutation: MutationRecord, resolve: () => void): void {
-    let textContent = ""
-
-    if (mutation.type === "characterData") {
-      textContent = mutation.target.textContent || ""
-    } else if (mutation.type === "childList") {
-      mutation.addedNodes.forEach((node) => {
-        textContent += node.textContent || ""
-      })
-    }
-
-    if (textContent) {
-      this.checkTextContent(textContent, resolve)
-    }
-  }
-
-  private checkTextContent(text: string, resolve: () => void): void {
-    // Use the exact same pattern as cosykoala
+  private detectRetryText(mutations: MutationRecord[]): boolean {
     const retryPattern = /Retry/i
-    const matches = this.findMatches(text, retryPattern)
 
-    matches.forEach((match) => {
-      const matchKey = `retry-button-${match}`
+    for (const mutation of mutations) {
+      let textContent = ""
 
-      // Allow duplicates like cosykoala does (allowDuplicates: true)
-      this.logger.debug(`String appeared: retry-button - "${match}"`)
-      this.logger.info("Retry button detected - Claude has finished responding")
-      this.stopMonitoring()
-      resolve()
-    })
-  }
+      if (mutation.type === "characterData") {
+        textContent = mutation.target.textContent || ""
+      } else if (mutation.type === "childList") {
+        mutation.addedNodes.forEach((node) => {
+          textContent += node.textContent || ""
+        })
+      }
 
-  private findMatches(text: string, pattern: RegExp): string[] {
-    const matches = text.match(pattern)
-    return matches ? Array.from(new Set(matches)) : []
+      if (textContent && retryPattern.test(textContent)) {
+        return true
+      }
+    }
+    return false
   }
 
   private stopMonitoring(): void {
@@ -91,16 +78,16 @@ export class ResponseMonitorService {
       this.observer = null
     }
     this.isMonitoring = false
-    this.foundStrings.clear()
-    this.logger.debug("Stopped response monitoring")
   }
 
-  // Public method to stop monitoring if needed
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
   public stop(): void {
     this.stopMonitoring()
   }
 
-  // Check if currently monitoring
   public isCurrentlyMonitoring(): boolean {
     return this.isMonitoring
   }

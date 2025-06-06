@@ -11,15 +11,8 @@ export class AutomationOrchestratorService {
   async executeAutomationSequence(): Promise<void> {
     this.logger.info("Starting automation sequence")
 
-    const automationSteps = [this.buttonSequence.clickButtonsSequentially.bind(this.buttonSequence)]
-
     try {
-      for (let i = 0; i < automationSteps.length; i++) {
-        this.logger.debug(`Executing automation step ${i + 1}/${automationSteps.length}`)
-        await automationSteps[i]()
-        this.logger.debug(`Completed automation step ${i + 1}`)
-      }
-
+      await this.buttonSequence.clickButtonsSequentially()
       this.logger.info("Automation sequence completed successfully")
     } catch (error) {
       this.logger.error(
@@ -27,11 +20,5 @@ export class AutomationOrchestratorService {
       )
       throw error
     }
-  }
-
-  // Method to add more automation steps in the future
-  addAutomationStep(step: () => Promise<void>): void {
-    // This could be implemented to dynamically add steps
-    this.logger.debug("Additional automation steps can be added here")
   }
 }
