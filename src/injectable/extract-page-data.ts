@@ -1,13 +1,9 @@
-import { PlainTextExtractionStrategy } from "../services/extraction/plain-text-strategy.js"
-import { TreeWalkerExtractionStrategy } from "../services/extraction/tree-walker-strategy.js"
-import { BaseExtractionStrategy } from "../services/extraction/base-extraction-strategy.js"
-
 /**
  * Injectable module for page data extraction
  * This script is bundled separately and injected into pages
  */
 
-// Base strategy class needed for inheritance
+// Base strategy class for inheritance
 class BaseStrategy {
   cleanText(text: string): string {
     return text
