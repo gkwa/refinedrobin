@@ -39,8 +39,8 @@ just teardown
 * Using the Extension
 
 ** Keyboard Shortcut (Recommended)
-- Windows/Linux: =Ctrl+Shift+R=
-- Mac: =Cmd+Shift+R=
+- Windows/Linux: =Ctrl+Shift+L=
+- Mac: =Cmd+Shift+L=
 
 ** Alternative Methods
 - Click the RefinedRobin icon in the Chrome toolbar
@@ -49,7 +49,7 @@ just teardown
 
 * Features
 
-- *Single Keystroke Activation*: Use =Ctrl+Shift+R= (or =Cmd+Shift+R= on Mac) from any webpage
+- *Single Keystroke Activation*: Use =Ctrl+Shift+L= (or =Cmd+Shift+L= on Mac) from any webpage
 - *Smart Page Extraction*: Captures URL and clean text content (like =lynx -dump=)
 - *Automated Navigation*: Opens Claude.ai in a new tab
 - *Form Automation*: Fills and submits the form with captured data
@@ -60,7 +60,7 @@ just teardown
 
 * How It Works
 
-1. Press =Ctrl+Shift+R= on any webpage
+1. Press =Ctrl+Shift+L= on any webpage
 2. Extension extracts the current page's URL and text content
 3. Opens a new tab with =https://claude.ai/new=
 4. Combines the URL, predefined message, and page content
