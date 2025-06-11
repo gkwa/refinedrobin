@@ -5,6 +5,7 @@ import { FormFillerService } from "./services/form-filler.js"
 import { PageExtractorService } from "./services/page-extractor.js"
 import { ResponseMonitorService } from "./services/response-monitor.js"
 import { DocumentSaverService } from "./services/document-saver.js"
+import { FollowUpService } from "./services/follow-up-service.js"
 import { PageData } from "./types/extension.js"
 import { loadTLDRSummaryPrompt, DEFAULT_PROMPT } from "./config/prompt-templates.js"
 
@@ -23,28 +24,47 @@ async function initializeExtension(): Promise<void> {
 
   // Listen for messages from background script
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "execute") {
-      const config = { ...DEFAULT_CONFIG, ...message.config }
-      const pageData = message.pageData as PageData | null
-
-      // If we're in custom mode and have predefined text from config, use it
-      if (config.mode === "custom" && config.predefinedText) {
-        config.predefinedText = config.predefinedText
-      } else {
-        // Otherwise, use default prompt - will be loaded in executeDirectly
-        config.predefinedText = DEFAULT_PROMPT
+    try {
+      // Handle ping for readiness check
+      if (message.action === "ping") {
+        sendResponse({ pong: true })
+        return false
       }
 
-      executeDirectly(config, pageData, logger)
-        .then(() => sendResponse({ success: true }))
-        .catch((error) => sendResponse({ success: false, error: error.message }))
+      if (message.action === "execute") {
+        const config = { ...DEFAULT_CONFIG, ...message.config }
+        const pageData = message.pageData as PageData | null
 
-      return true // Indicates we will send a response asynchronously
+        // If we're in custom mode and have predefined text from config, use it
+        if (config.mode === "custom" && config.predefinedText) {
+          config.predefinedText = config.predefinedText
+        } else {
+          // Otherwise, use default prompt - will be loaded in executeDirectly
+          config.predefinedText = DEFAULT_PROMPT
+        }
+
+        executeDirectly(config, pageData, logger)
+          .then(() => sendResponse({ success: true }))
+          .catch((error) => sendResponse({ success: false, error: error.message }))
+
+        return true // Indicates we will send a response asynchronously
+      }
+
+      // Return false to indicate we're not handling this message
+      return false
+    } catch (error) {
+      logger.error(
+        `Error handling message: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      sendResponse({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+      return false
     }
-
-    // Return false to indicate we're not handling this message
-    return false
   })
+
+  logger.info("Content script initialized successfully")
 }
 
 async function executeDirectly(
@@ -63,6 +83,7 @@ async function executeDirectly(
     const contentBuilder = new ContentBuilderService(logger)
     const responseMonitor = new ResponseMonitorService(logger)
     const documentSaver = new DocumentSaverService(logger)
+    const followUpService = new FollowUpService(logger)
 
     const { textbox, submitButton } = formFinder.findFormElements()
 
@@ -123,7 +144,22 @@ async function executeDirectly(
     // Pipeline of operations
     formFiller.fillTextbox(textbox, contentToFill)
     formFiller.submitForm(submitButton)
-    await responseMonitor.waitForCompletion()
+
+    // Wait for Claude's response and then send follow-up with URL
+    await responseMonitor.waitForCompletionWithCallback(async () => {
+      try {
+        await followUpService.sendUrlFollowUp()
+
+        // Wait an additional 10 seconds after sending the URL message before starting export
+        logger.info("Waiting 10 seconds after URL follow-up before starting export/save workflow")
+        await delay(10000)
+        logger.info("10-second delay complete - proceeding with export/save")
+      } catch (error) {
+        logger.error(`Follow-up failed: ${error instanceof Error ? error.message : String(error)}`)
+        // Don't throw here, just log the error so the main pipeline continues
+      }
+    })
+
     await documentSaver.saveClaudeResponse()
   } catch (error) {
     logger.error(`Execution failed: ${error instanceof Error ? error.message : String(error)}`)
@@ -155,6 +191,11 @@ async function waitForElements(logger: ConsoleLogger): Promise<void> {
   }
 
   throw new Error("Elements not found after maximum attempts")
+}
+
+// Helper delay function
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 // Initialize when DOM is ready

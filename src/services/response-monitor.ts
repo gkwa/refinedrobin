@@ -16,6 +16,22 @@ export class ResponseMonitorService {
     this.logger.info("30-second delay complete - ready for next pipeline step")
   }
 
+  async waitForCompletionWithCallback(onComplete?: () => Promise<void>): Promise<void> {
+    this.logger.info("Waiting for Claude to finish responding...")
+
+    await this.startMonitoring()
+
+    this.logger.info("Claude has finished responding - waiting 30 seconds before follow-up")
+    await this.delay(30000)
+
+    if (onComplete) {
+      this.logger.info("Executing follow-up callback")
+      await onComplete()
+    }
+
+    this.logger.info("Response monitoring and follow-up complete")
+  }
+
   private startMonitoring(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.isMonitoring) {

@@ -17,6 +17,23 @@ export class FormFinderService {
     return { textbox, submitButton }
   }
 
+  findAllTextboxes(): HTMLElement[] {
+    const textboxes: HTMLElement[] = []
+
+    // Try each selector from config in order
+    for (const selector of this.config.selectors.textbox) {
+      const elements = document.querySelectorAll(selector)
+      elements.forEach((element) => {
+        if (element instanceof HTMLElement && this.isVisible(element)) {
+          textboxes.push(element)
+        }
+      })
+    }
+
+    this.logger.debug(`Found ${textboxes.length} textboxes total`)
+    return textboxes
+  }
+
   private findTextbox(): HTMLElement | null {
     // Try each selector from config in order
     for (const selector of this.config.selectors.textbox) {
