@@ -34,7 +34,7 @@ export class UrlMonitorService {
     }
 
     // Listen for back/forward button navigation
-    window.addEventListener('popstate', () => {
+    window.addEventListener("popstate", () => {
       this.handleUrlChange(onUrlChange)
     })
 
