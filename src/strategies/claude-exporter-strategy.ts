@@ -25,23 +25,20 @@ export class ClaudeExporterStrategy implements DocumentSaveStrategy {
   async save(): Promise<void> {
     this.logger.info(`Using ${CLAUDE_EXPORTER_CONFIG.name} extension to save document`)
 
-    // Perform detailed availability check with diagnostics
-    const availabilityCheck = this.performDetailedAvailabilityCheck()
-    if (!availabilityCheck.isAvailable) {
-      const errorMessage = `${CLAUDE_EXPORTER_CONFIG.name} extension is not available. ${availabilityCheck.reason}`
+    // Step 1: Wait for and click Select button
+    try {
+      const selectButton = await this.waitForButton(
+        CLAUDE_EXPORTER_CONFIG.buttonText.select,
+        CLAUDE_EXPORTER_CONFIG.timeouts.exportButtonWait,
+      )
+      this.logger.info(`Clicking ${CLAUDE_EXPORTER_CONFIG.name} Select button...`)
+      selectButton.click()
+    } catch (error) {
+      const errorMessage = `${CLAUDE_EXPORTER_CONFIG.name} extension is not available. Select button not found within timeout.`
       this.logger.error(errorMessage)
       this.logger.info(`Install from: ${CLAUDE_EXPORTER_CONFIG.chromeStoreUrl}`)
       throw new Error(errorMessage)
     }
-
-    // Step 1: Click Select button
-    const selectButton = this.findSelectButton()
-    if (!selectButton) {
-      throw new Error(`${CLAUDE_EXPORTER_CONFIG.name} Select button not found`)
-    }
-
-    this.logger.info(`Clicking ${CLAUDE_EXPORTER_CONFIG.name} Select button...`)
-    selectButton.click()
 
     // Give extra time for the selection to register and include our injected URL
     await this.delay(1000)
