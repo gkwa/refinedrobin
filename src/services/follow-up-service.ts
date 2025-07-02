@@ -14,7 +14,11 @@ export class FollowUpService {
       this.logger.debug(`Current URL: ${currentUrl}`)
 
       // Create the follow-up message with better context
-      const followUpMessage = `This URL is for my reference since I will be printing this page - I want to know the URL of this Claude discussion: ${currentUrl}`
+      const followUpMessage = `
+      This URL is for my reference since I will be printing this page - I want to know the URL of this Claude discussion: ${currentUrl}.
+
+      You don't need to respond to this comment since this comment is only for my reference and as a result of me typing this comment into this thread I have all that I need for this url to be in the proper place.
+      `
       this.logger.debug(`Follow-up message: ${followUpMessage}`)
 
       // Wait a bit for the UI to be ready for new input
