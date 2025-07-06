@@ -12,6 +12,10 @@ So the result would be this:
 
 This allows vertical breathing room to allow user to rest between reading.
 
+Next, add another 5 newlines for more breathing room.
+
+
+
 - **Concise Summarization**: Transform lengthy content into essential key points without losing critical information
 
 - **Structured Formatting**: Present summaries with clear paragraph breaks for enhanced readability
