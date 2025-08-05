@@ -5,8 +5,6 @@ export class ResponseMonitorService {
   private isMonitoring = false
   private retryDetectionTimeout: number | null = null
   private pollingInterval: number | null = null
-  private originalVisibilityState: string | null = null
-  private originalHidden: boolean | null = null
 
   constructor(private logger: Logger) {}
 
@@ -46,9 +44,6 @@ export class ResponseMonitorService {
       this.isMonitoring = true
       this.logger.debug("Starting response monitoring for retry button")
 
-      // Override visibility API to trick Claude
-      this.overrideVisibilityAPI()
-
       // Log visibility state
       this.logVisibilityState()
 
@@ -65,9 +60,9 @@ export class ResponseMonitorService {
         resolve()
       })
 
-      // Set up 2-minute timeout (longer since we're now forcing visibility)
+      // Set up 1-minute timeout to check if retry button appeared
       this.retryDetectionTimeout = window.setTimeout(() => {
-        this.logger.error("TIMEOUT: Retry button not detected within 2 minutes")
+        this.logger.error("TIMEOUT: Retry button not detected within 1 minute")
         this.logger.error(`Current visibility state: ${document.visibilityState}`)
         this.logger.error(`Document has focus: ${document.hasFocus()}`)
         this.logger.error(`Window has focus: ${window.document.hasFocus()}`)
@@ -80,7 +75,7 @@ export class ResponseMonitorService {
             `Retry button ${index}: "${btn.textContent?.trim().substring(0, 100)}..." - visible: ${this.isElementVisible(btn)}`,
           )
         })
-      }, 120000) // 2 minutes
+      }, 60000) // 1 minute
 
       this.observer = new MutationObserver((mutations) => {
         if (this.detectRetryText(mutations)) {
@@ -109,55 +104,6 @@ export class ResponseMonitorService {
         }
       }, 300000)
     })
-  }
-
-  private overrideVisibilityAPI(): void {
-    this.logger.info("Overriding Page Visibility API to always report 'visible'")
-
-    // Store original values
-    this.originalVisibilityState = document.visibilityState
-    this.originalHidden = document.hidden
-
-    // Override visibilityState to always return 'visible'
-    Object.defineProperty(document, "visibilityState", {
-      get: () => "visible",
-      configurable: true,
-    })
-
-    // Override hidden to always return false
-    Object.defineProperty(document, "hidden", {
-      get: () => false,
-      configurable: true,
-    })
-
-    // Override hasFocus to always return true
-    Object.defineProperty(document, "hasFocus", {
-      value: () => true,
-      configurable: true,
-    })
-
-    this.logger.info("Visibility API override complete - Claude should think tab is always visible")
-  }
-
-  private restoreVisibilityAPI(): void {
-    if (this.originalVisibilityState !== null && this.originalHidden !== null) {
-      this.logger.info("Restoring original Page Visibility API")
-
-      // Restore original visibilityState
-      Object.defineProperty(document, "visibilityState", {
-        get: () => this.originalVisibilityState,
-        configurable: true,
-      })
-
-      // Restore original hidden
-      Object.defineProperty(document, "hidden", {
-        get: () => this.originalHidden,
-        configurable: true,
-      })
-
-      // Restore original hasFocus (this is tricky, but we'll try)
-      delete (document as any).hasFocus
-    }
   }
 
   private startPolling(onRetryFound: () => void): void {
@@ -300,7 +246,6 @@ export class ResponseMonitorService {
     }
 
     this.stopPolling()
-    this.restoreVisibilityAPI()
 
     // Clean up event listeners
     document.removeEventListener("visibilitychange", this.onVisibilityChange.bind(this))
