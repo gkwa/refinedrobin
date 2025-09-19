@@ -54,6 +54,7 @@ export const CLAUDE_CONFIG: SiteConfig = {
       'input[type="text"]',
     ],
     submitButton: [
+      'button.inline-flex[aria-label="Send message"]',
       'button[aria-label*="Send"]',
       'button[aria-label*="submit"]',
       'button[type="submit"]',
