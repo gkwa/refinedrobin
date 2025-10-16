@@ -1,1 +1,6 @@
 dist/
+.nearwait.yml
+.nearwait.txtar
+.nearwait.yml
+.nearwait.txtar
+node_modules
