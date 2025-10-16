@@ -1,13 +1,8 @@
 import { Logger } from "../types/extension.js"
-import { ScrollService } from "./scroll-service.js"
-import { InteractionService } from "./interaction-service.js"
 
 export class ResponseMonitorService {
   private observer: MutationObserver | null = null
   private isMonitoring = false
-  private scrollService: ScrollService | null = null
-  private interactionService: InteractionService | null = null
-  private interactionInterval: NodeJS.Timeout | null = null
 
   constructor(private logger: Logger) {}
 
@@ -47,16 +42,6 @@ export class ResponseMonitorService {
       this.isMonitoring = true
       this.logger.debug("Starting response monitoring for retry button")
 
-      // Start scroll service to help trigger UI rendering
-      this.scrollService = new ScrollService(this.logger, 1000)
-      this.scrollService.start()
-      this.logger.info("Scroll service started to help trigger response completion")
-
-      // Start interaction service to simulate user engagement
-      this.interactionService = new InteractionService(this.logger, 2000)
-      this.interactionInterval = this.interactionService.startInteractionSimulation(2000)
-      this.logger.info("Interaction service started (focus pulses and clicks every 2 seconds)")
-
       this.observer = new MutationObserver((mutations) => {
         if (this.detectRetryText(mutations)) {
           this.logger.info("Retry button detected - Claude has finished responding")
@@ -74,11 +59,7 @@ export class ResponseMonitorService {
       // 5 minute timeout fallback
       setTimeout(() => {
         if (this.isMonitoring) {
-          this.logger.debug("Response monitoring timeout reached (5 minutes)")
-          if (this.scrollService) {
-            const scrollStats = `${this.scrollService.getScrollCount()} scrolls over ${(this.scrollService.getElapsedTime() / 1000).toFixed(2)}s`
-            this.logger.info(`Stopping monitoring - scroll stats: ${scrollStats}`)
-          }
+          this.logger.debug("Response monitoring timeout reached")
           this.stopMonitoring()
           resolve()
         }
@@ -112,21 +93,6 @@ export class ResponseMonitorService {
       this.observer.disconnect()
       this.observer = null
     }
-
-    if (this.scrollService) {
-      this.scrollService.stop()
-      this.scrollService = null
-    }
-
-    if (this.interactionInterval) {
-      clearInterval(this.interactionInterval)
-      this.interactionInterval = null
-    }
-
-    if (this.interactionService) {
-      this.interactionService = null
-    }
-
     this.isMonitoring = false
   }
 
