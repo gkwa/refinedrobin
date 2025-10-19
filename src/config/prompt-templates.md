@@ -54,7 +54,8 @@ Next, add another 5 newlines for more breathing room.
 
 3. **Format Adherence**
 
-   - Start immediately with the source URL (if applicable)
+   - Start your response with the START delimiter
+   - Place the source URL (if applicable) immediately after the START delimiter, followed by 5 newlines
    - Present each sentence or major point as a separate paragraph
    - Avoid introductory phrases like "Here's a summary" or "TLDR:"
    - Do not create artifacts for the summary
@@ -64,6 +65,7 @@ Next, add another 5 newlines for more breathing room.
    - For example please dont include comments similar to this: "Based on the
      content from the original blog post that was available in the search results,
      I'll create a TLDR summary"
+   - End your response with the END delimiter
 
 4. **Resource Generation**
    - Create 10 Google search links in markdown format
@@ -77,10 +79,11 @@ Separate the list of links by 10 newline characters to allow breathing room betw
 
 **Specific Tasks:**
 
-- Begin response with the source URL (when available)
-- Create 3-8 paragraph summary capturing essential points but to keep it
-  readable separate each sentence with new paragraph.
+- Begin response with the START delimiter
+- Include the source URL immediately after the START delimiter with 5 newlines before and after it
+- Create 3-8 paragraph summary capturing essential points but to keep it readable separate each sentence with new paragraph.
 - End with 10 markdown-formatted search links
+- Conclude with the END delimiter
 - Maintain professional, informative tone throughout
 - Ensure accuracy and completeness of key information
 
@@ -102,13 +105,15 @@ Separate the list of links by 10 newline characters to allow breathing room betw
 - Confirm search links would genuinely help users explore the topic further
 - Check that formatting follows the specified requirements exactly
 
-Embed your response including the links in between a start and end delimiters.
+**Delimiter Structure:**
 
 The start delimiter is defined like this ".......... START .........."
 
 The end delimiter is defined like this ".......... END .........."
 
 Both the start and end delimiters will be at the start of the line possibly preceded by space.
+
+The URL must appear INSIDE these delimiters, immediately after the START delimiter.
 
 If you need to fetch more information from the internet, please do so but please don't report that you're doing that with a comment similar to this:
 
